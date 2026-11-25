@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Enter the Realm</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body, html {
+    margin: 0; padding: 0; width: 100%; height: 100vh;
+    background-color: #0a1128; overflow: hidden;
+    font-family: 'Cinzel', serif;
+    position: fixed; top: 0; left: 0;
+    cursor: none;
+  }
+
+  /* --- КУРСОР И ШЛЕЙФ --- */
+  .cursor-glow {
+    position: fixed; width: 30px; height: 30px;
+    border: 2px solid #ffd700; border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+    box-shadow: 0 0 15px #ffd700, inset 0 0 10px #00ffff;
+    mix-blend-mode: screen;
+  }
+  .cursor-spark {
+    position: fixed; width: 6px; height: 6px;
+    background: #ffd700; border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    box-shadow: 0 0 10px #ffd700;
+    animation: sparkFade 0.8s linear forwards;
+  }
+  @keyframes sparkFade {
+    0% { opacity: 1; transform: scale(1) translateY(0); }
+    100% { opacity: 0; transform: scale(0) translateY(20px); }
+  }
+
+  /* --- МАГИЧЕСКИЙ ФОН --- */
+  .bg-gradient {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, #1e3a8a 0%, #0a1128 70%);
+    z-index: 1;
+  }
+  .sparkles {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      radial-gradient(2px 2px at 20% 30%, #ffd700, transparent),
+      radial-gradient(2px 2px at 40% 70%, #00ffff, transparent),
+      radial-gradient(1px 1px at 60% 20%, #fff, transparent),
+      radial-gradient(2px 2px at 80% 80%, #ffd700, transparent);
+    background-size: 200px 200px;
+    animation: floatSparks 10s linear infinite;
+    z-index: 2; opacity: 0.6;
+  }
+  @keyframes floatSparks { 0% { transform: translateY(0); } 100% { transform: translateY(-200px); } }
+
+  .runes {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 400px; height: 400px; border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 50%; z-index: 2;
+    animation: rotate 30s linear infinite;
+  }
+  .runes::before, .runes::after { content: ''; position: absolute; border-radius: 50%; }
+  .runes::before {
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border: 1px dashed rgba(0, 255, 255, 0.3);
+    animation: rotateReverse 20s linear infinite;
+  }
+  .runes::after {
+    top: 40px; left: 40px; right: 40px; bottom: 40px;
+    border: 2px solid rgba(255, 215, 0, 0.1);
+  }
+  @keyframes rotate { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes rotateReverse { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+
+  /* --- ОКНО --- */
+  .main-window {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 420px; 
+    background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+    border: 1px solid #ffd700; border-radius: 15px; 
+    padding: 30px 25px; z-index: 10;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.1);
+    color: #fff; text-align: center; 
+    animation: float 6s ease-in-out infinite;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .main-window::-webkit-scrollbar { width: 4px; }
+  .main-window::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 2px; }
+
+  @keyframes float { 0%, 100% { transform: translate(-50%, -50%) translateY(0); } 50% { transform: translate(-50%, -50%) translateY(-12px); } }
+
+  .avatar-container {
+    position: relative; width: 80px; height: 80px; margin: 0 auto 15px auto;
+    transition: transform 0.3s ease;
+  }
+  .avatar-container:hover { transform: scale(1.1) rotate(5deg); }
+  
+  .main-window img {
+    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    border: 3px solid #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    position: relative; z-index: 2;
+  }
+  .avatar-glow {
+    position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border-radius: 50%; background: linear-gradient(45deg, #ffd700, #00ffff);
+    z-index: 1; filter: blur(8px); opacity: 0.6;
+    animation: pulseGlow 3s infinite alternate;
+  }
+  @keyframes pulseGlow { 0% { opacity: 0.3; } 100% { opacity: 0.8; } }
+
+  .main-window h1 { 
+    margin: 0; font-size: 22px; letter-spacing: 3px; color: #ffd700; 
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    font-weight: 700;
+  }
+  .main-window p.subtitle { color: #a5b4fc; font-size: 13px; line-height: 1.5; margin: 10px 0 20px; }
+
+  /* --- БЛОК ПРАВИЛ --- */
+  .rules-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: left;
+    font-size: 12px;
+    color: #d1d5db;
+    line-height: 1.6;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .rules-box::-webkit-scrollbar { width: 4px; }
+  .rules-box::-webkit-scrollbar-thumb { background: #00ffff; border-radius: 2px; }
+  
+  .rules-box h3 {
+    margin: 0 0 8px 0;
+    color: #ffd700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .rules-box ul {
+    margin: 0;
+    padding-left: 15px;
+  }
+  .rules-box li { margin-bottom: 5px; }
+  .rules-box li::marker { color: #00ffff; }
+
+  /* --- ЧЕКБОКС --- */
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    cursor: none;
+    font-size: 13px;
+    color: #a5b4fc;
+    transition: color 0.3s;
+  }
+  .checkbox-container:hover { color: #fff; }
+
+  .checkbox-container input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #00ffff;
+    border-radius: 4px;
+    background: transparent;
+    cursor: none;
+    position: relative;
+    transition: all 0.3s;
+  }
+  .checkbox-container input[type="checkbox"]:checked {
+    background: #00ffff;
+    box-shadow: 0 0 10px #00ffff;
+  }
+  .checkbox-container input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #0a1128;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  /* --- КНОПКА --- */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: linear-gradient(135deg, #1e3a8a, #0a1128);
+    color: #ffd700; border: 1px solid #ffd700; 
+    padding: 15px 20px; text-decoration: none; 
+    font-size: 16px; font-weight: bold; text-transform: uppercase; 
+    transition: all 0.3s ease; cursor: none; position: relative; 
+    overflow: hidden; border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+    letter-spacing: 2px;
+    opacity: 0.5; /* Изначально бледная */
+    pointer-events: none; /* Изначально не кликабельная */
+  }
+  
+  /* Активное состояние кнопки */
+  .btn.active {
+    opacity: 1;
+    pointer-events: auto;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+  }
+
+  .btn.active::before { 
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; 
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), transparent); 
+    transition: 0.5s; z-index: 1; 
+  }
+  .btn.active:hover::before { left: 100%; }
+  .btn.active:hover { 
+    box-shadow: 0 0 40px rgba(255, 215, 0, 1); 
+    transform: scale(1.05); 
+    background: linear-gradient(135deg, #0a1128, #1e3a8a);
+  }
+  .btn span { position: relative; z-index: 2; }
+
+  .status-bar {
+    margin-top: 20px; border-top: 1px solid rgba(255, 215, 0, 0.2); padding-top: 10px;
+    font-size: 11px; color: #a5b4fc; display: flex; justify-content: space-between;
+    letter-spacing: 1px;
+  }
+
+  /* Предупреждение */
+  .warning-msg {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95); color: #00ffff;
+    border: 1px solid #00ffff; border-radius: 8px;
+    padding: 15px 25px; font-size: 14px; font-weight: bold;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    z-index: 10000; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    text-align: center;
+  }
+  .warning-msg.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="warning-msg" id="warningMsg">Вы должны согласиться с правилами!</div>
+
+  <div class="bg-gradient"></div>
+  <div class="sparkles"></div>
+  <div class="runes"></div>
+
+  <div class="main-window">
+    <div class="avatar-container">
+      <div class="avatar-glow"></div>
+      <img src="https://i.imgur.com/lTlIJP7.jpeg" alt="ava">
+    </div>
+
+    <h1>THE GATE</h1>
+    <p class="subtitle">Для входа в закрытый мир вы должны принять законы этого realms.</p>
+    
+    <!-- БЛОК ПРАВИЛ -->
+    <div class="rules-box">
+      <h3>ПРАВИЛА РЕАЛМА</h3>
+      <ul>
+        <li>Уважай других путников и храни мир.</li>
+        <li>Запрещено распространение тьмы (спама и флуда).</li>
+        <li>Не используй запрещенные артефакты (читы).</li>
+        <li>Администрация вправе изгнать нарушителя без предупреждения.</li>
+      </ul>
+    </div>
+
+    <!-- ЧЕКБОКС СОГЛАСИЯ -->
+    <label class="checkbox-container">
+      <input type="checkbox" id="agreeCheckbox" onchange="toggleButton()">
+      Я прочитал и согласен с правилами
+    </label>
+    
+    <!-- КНОПКА (изначально заблокирована) -->
+    <button class="btn" id="joinBtn" onclick="checkRules()">
+      <span>Вступить в чат</span><span>⚔️</span>
+    </button>
+
+    <div class="status-bar">
+      <span>REALM: ACTIVE</span>
+      <span>★</span>
+    </div>
+  </div>
+
+  <script>
+    // КУРСОР
+    const cursor = document.getElementById('cursorGlow');
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+      createSpark(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      cursor.style.left = touch.clientX + 'px';
+      cursor.style.top = touch.clientY + 'px';
+      createSpark(touch.clientX, touch.clientY);
+    });
+    const interactiveElements = document.querySelectorAll('a, .btn, .avatar-container, .checkbox-container');
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '50px';
+        cursor.style.height = '50px';
+        cursor.style.background = 'rgba(0, 255, 255, 0.2)';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '30px';
+        cursor.style.height = '30px';
+        cursor.style.background = 'transparent';
+      });
+    });
+    function createSpark(x, y) {
+      if (document.querySelectorAll('.cursor-spark').length > 15) return;
+      const spark = document.createElement('div');
+      spark.className = 'cursor-spark';
+      const randomX = (Math.random() - 0.5) * 20;
+      const randomY = (Math.random() - 0.5) * 20;
+      spark.style.left = (x + randomX) + 'px';
+      spark.style.top = (y + randomY) + 'px';
+      spark.style.background = Math.random() > 0.5 ? '#ffd700' : '#00ffff';
+      spark.style.boxShadow = `0 0 10px ${spark.style.background}`;
+      document.body.appendChild(spark);
+      setTimeout(() => { spark.remove(); }, 800);
+    }
+
+    // ЛОГИКА ПРАВИЛ
+    const checkbox = document.getElementById('agreeCheckbox');
+    const joinBtn = document.getElementById('joinBtn');
+    const warningMsg = document.getElementById('warningMsg');
+
+    // Разблокировка кнопки при галочке
+    function toggleButton() {
+      if (checkbox.checked) {
+        joinBtn.classList.add('active');
+        joinBtn.style.opacity = '1';
+        joinBtn.style.pointerEvents = 'auto';
+        warningMsg.classList.remove('show');
+      } else {
+        joinBtn.classList.remove('active');
+        joinBtn.style.opacity = '0.5';
+        joinBtn.style.pointerEvents = 'none';
+      }
+    }
+
+    // Проверка при клике на кнопку
+    function checkRules() {
+      if (!checkbox.checked) {
+        // Показываем предупреждение
+        warningMsg.classList.add('show');
+        
+        // Тряска окна
+        const mainWindow = document.querySelector('.main-window');
+        mainWindow.style.animation = 'none';
+        mainWindow.offsetHeight; // Триггер рефлоу
+        mainWindow.style.animation = 'float 6s ease-in-out infinite, shake 0.5s';
+        
+        // Скрываем предупреждение через 3 секунды
+        setTimeout(() => {
+          warningMsg.classList.remove('show');
+        }, 3000);
+      } else {
+        // Перенаправляем на чат
+        window.open('https://t.me/lobbyDredmit', '_blank');
+      }
+    }
+
+    // Добавляем анимацию тряски в CSS динамически (если ее нет)
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes shake {
+        0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translate(-50%, -50%) translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translate(-50%, -50%) translateX(5px); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
